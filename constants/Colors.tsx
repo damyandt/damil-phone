@@ -1,4 +1,4 @@
-export const Colors = {
+export const Colors: any = {
   primary: "#000000ff",
   secondary: "#6C63FF",
   background: "#f5f5f5",
@@ -45,7 +45,7 @@ export const Colors = {
     title: "#ffffff",
     layoutBackground: "#252728",
     shadow: {
-      shadowColor: "#ffffffff",
+      shadowColor: "#ffffff",
       shadowOffset: { width: 0, height: -2 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
