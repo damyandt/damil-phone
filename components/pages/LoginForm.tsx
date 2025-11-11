@@ -11,8 +11,10 @@ import { Ionicons } from "@expo/vector-icons";
 import callApi from "../../API/callApi";
 import { postLogin } from "../../API/queries/auth/apiAuthpostQueris";
 import { COOKIE_REFRESH_TOKEN } from "../../constants/auth";
-import { setCookie } from "../../Global/Utils/commonFunctions";
+import { getCookie, setCookie } from "../../Global/Utils/commonFunctions";
 import { router } from "expo-router";
+import ThemedText from "../ThemedText";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginFormRN = () => {
   const { setUserSignedIn } = useAuthedContext();
@@ -64,27 +66,30 @@ const LoginFormRN = () => {
       });
       console.log("Login response:", response);
 
-      //   if (!response.success) {
-      //     setErrors({ password: "Invalid Password!" });
-      //     return;
-      //   }
+      if (response.message) {
+        setErrors({ password: "Invalid Email or Password!" });
+        return;
+      } else {
+        const refreshCookie: any = {
+          name: COOKIE_REFRESH_TOKEN,
+          value: response.refreshToken,
+          exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
+          sameSite: "strict",
+          secure: true,
+        };
+
+        await setCookie(refreshCookie);
+        // const cookie = await AsyncStorage.getItem(refreshCookie);
+        // console.log("82", cookie);
+        // setUserSignedIn(false);
+        // setUserSignedIn(true);
+        router.replace("/(tabs)");
+      }
 
       //   if (response.message === errorMessages(t).unverified) {
       //     setOpenModal(true);
       //     return;
       //   }
-
-      const refreshCookie: any = {
-        name: COOKIE_REFRESH_TOKEN,
-        value: response.refreshToken,
-        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
-        sameSite: "strict",
-        secure: true,
-      };
-      await setCookie(refreshCookie);
-      setUserSignedIn(true);
-      //   passwordRef.current?.focus();
-      router.replace("/(tabs)");
     } catch (err) {
       setErrors({ password: "Invalid Password!" });
       console.log("Login failed:", err);
@@ -132,6 +137,9 @@ const LoginFormRN = () => {
           />
         </TouchableOpacity>
       </View>
+      {Object.values(errors).length !== 0 && (
+        <ThemedText>{Object.values(errors)[0]}</ThemedText>
+      )}
       <Text style={{ alignSelf: "flex-end", color: "#333" }}>
         Forgot Password?
       </Text>

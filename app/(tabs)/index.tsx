@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { Colors } from "../../constants/Colors";
 import ThemedView from "../../components/newThemedView";
 import ThemedBox from "../../components/ThemedBox";
 import ThemedText from "../../components/ThemedText";
+import { useAuthedContext } from "../../contexts/AuthContext";
+import { debugStorage } from "../../Global/Utils/commonFunctions";
 
 type ClassItem = {
   title: string;
@@ -29,7 +31,15 @@ const MembersHome: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
+  const { authedUser } = useAuthedContext();
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log(authedUser);
+      debugStorage();
+    }, 2000);
 
+    return () => clearInterval(interval);
+  }, [authedUser]);
   const handleTabPress = (tabKey: TabKey) => {
     setActiveTab(tabKey);
     Animated.timing(tabAnim, {

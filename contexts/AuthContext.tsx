@@ -122,6 +122,20 @@ const AuthContext = ({ children }: AuthContextProps): React.ReactElement => {
   }, [userSignedIn]);
 
   useEffect(() => {
+    (async () => {
+      try {
+        if (!authedUser?.id) {
+          setLoading(true);
+          await checkIfUserIsSignedIn();
+        }
+      } catch (err) {
+        console.error("Authed user error", err);
+      }
+      setLoading(false);
+    })();
+  }, [userSignedIn]);
+
+  useEffect(() => {
     if (authedUser.email === "error" && userSignedIn) {
       setUserSignedIn(false);
     } else if (authedUser.email !== "error" && !userSignedIn) {
@@ -164,7 +178,7 @@ const AuthContext = ({ children }: AuthContextProps): React.ReactElement => {
 
   const checkIfUserIsSignedIn = async () => {
     const refreshToken: any = await getCookie(COOKIE_REFRESH_TOKEN);
-
+    console.log("refresh", refreshToken);
     if (refreshToken) {
       const newAccessToken = await handleFetchUserAccessToken(
         refreshToken,
