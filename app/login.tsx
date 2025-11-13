@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
@@ -7,33 +7,36 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
-import LoginFormRN from "../../components/pages/LoginForm";
-import { useAuthedContext } from "../../contexts/AuthContext";
+import LoginFormRN from "../components/pages/LoginForm";
+import { AuthContext } from "../contexts/AuthContext";
 
 const { height } = Dimensions.get("window");
 
 const LoginPage = () => {
-  const { setUserSignedIn } = useAuthedContext();
+  const [formData, setFormData] = useState<any>({ email: "", password: "" });
   const boxTranslateY = useSharedValue(0);
   const logoTranslateY = useSharedValue(0);
   const logoScale = useSharedValue(1);
   const isAnimating = useRef(false);
-
+  const authContext = useContext(AuthContext);
   const handleSuccessfulLogin = () => {
     if (isAnimating.current) return;
+
     isAnimating.current = true;
-
     boxTranslateY.value = withTiming(height, { duration: 700 });
-
     logoTranslateY.value = withTiming(height / 2 - 150, { duration: 700 });
     logoScale.value = withTiming(1.5, { duration: 700 });
 
-    setTimeout(() => {
-      setUserSignedIn(false);
-      setUserSignedIn(true);
-    }, 500);
-    setTimeout(() => {
-      router.replace("/(tabs)");
+    setTimeout(async () => {
+      const success = await authContext.login(
+        formData.email,
+        formData.password
+      );
+
+      if (!success) {
+        isAnimating.current = false;
+        return;
+      }
     }, 1000);
   };
 
@@ -59,7 +62,11 @@ const LoginPage = () => {
           <Text style={styles.header}>Login</Text>
 
           <View style={styles.formContainer}>
-            <LoginFormRN onSuccess={handleSuccessfulLogin} />
+            <LoginFormRN
+              onSuccess={handleSuccessfulLogin}
+              formData={formData}
+              setFormData={setFormData}
+            />
 
             <View style={styles.registerWrapper}>
               <Text style={styles.registerText}>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,26 +6,20 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { useAuthedContext } from "../../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
-import callApi from "../../API/callApi";
-import { postLogin } from "../../API/queries/auth/apiAuthpostQueris";
-import {
-  COOKIE_ACCESS_TOKEN,
-  COOKIE_REFRESH_TOKEN,
-} from "../../constants/auth";
-import { getCookie, setCookie } from "../../Global/Utils/commonFunctions";
 import ThemedText from "../ThemedText";
 
-const LoginFormRN = ({ onSuccess }: { onSuccess: any }) => {
-  const { setUserSignedIn } = useAuthedContext();
-  //   const { t } = useLanguageContext();
-  const [formData, setFormData] = useState({ email: "", password: "" });
+const LoginFormRN = ({
+  onSuccess,
+  formData,
+  setFormData,
+}: {
+  onSuccess: any;
+  formData: any;
+  setFormData: any;
+}) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  // const [disableEmail, setDisableEmail] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const passwordRef = useRef<TextInput>(null);
 
   const validator = (onlyEmail = false) => {
     const newErrors: { [key: string]: string } = {};
@@ -36,63 +30,11 @@ const LoginFormRN = ({ onSuccess }: { onSuccess: any }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // const handleNextClick = async () => {
-  //   if (!validator(true)) return;
-
-  //   try {
-  //     //   const response = await callApi<any>({
-  //     //     query: validateEmail({ email: formData.email }),
-  //     //     auth: null,
-  //     //   });
-
-  //     //   if (!response.success) {
-  //     //     setErrors({ email: errorMessages(t).invalidEmail });
-  //     //     return;
-  //     //   }
-  //     setDisableEmail(true);
-  //     setTimeout(() => passwordRef.current?.focus(), 100);
-  //   } catch (err) {
-  //     //   setErrors({ email: errorMessages(t).internalServerError });
-  //     console.log("Email validation failed:", err);
-  //   }
-  // };
-
   const handleLogin = async () => {
     if (!validator(false)) return;
     console.log(formData);
-    try {
-      const response = await callApi<any>({
-        query: postLogin(formData),
-        auth: null,
-      });
-      console.log("Login response:", response);
 
-      if (response.message) {
-        setErrors({ password: "Invalid Email or Password!" });
-        return;
-      } else {
-        const refreshCookie: any = {
-          name: COOKIE_REFRESH_TOKEN,
-          value: response.refreshToken,
-          exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
-          sameSite: "strict",
-          secure: true,
-        };
-        await setCookie(refreshCookie);
-        const accessCookie: any = {
-          name: COOKIE_ACCESS_TOKEN,
-          value: response.refreshToken,
-          exp: Math.floor(Date.now() / 1000) + 60 * 15,
-          sameSite: "strict",
-          secure: true,
-        };
-        await setCookie(accessCookie);
-      }
-      onSuccess?.();
-    } catch (err) {
-      setErrors({ password: "Invalid Password!" });
-      console.log("Login failed:", err);
-    }
+    onSuccess?.();
   };
 
   return (
@@ -106,7 +48,7 @@ const LoginFormRN = ({ onSuccess }: { onSuccess: any }) => {
           placeholder={errors.email || "Email"}
           value={formData.email}
           onChangeText={(text) => {
-            setFormData((prev) => ({ ...prev, email: text }));
+            setFormData((prev: any) => ({ ...prev, email: text }));
             setErrors((prev) => ({ ...prev, email: "" }));
           }}
         />
@@ -121,7 +63,7 @@ const LoginFormRN = ({ onSuccess }: { onSuccess: any }) => {
           secureTextEntry={!showPassword}
           value={formData.password}
           onChangeText={(text) => {
-            setFormData((prev) => ({ ...prev, password: text }));
+            setFormData((prev: any) => ({ ...prev, password: text }));
             setErrors((prev) => ({ ...prev, password: "" }));
           }}
         />

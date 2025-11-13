@@ -4,10 +4,10 @@ import {
   useColorScheme,
   ViewStyle,
 } from "react-native";
-import ThemedBox from "../../components/ThemedBox";
-import ThemedText from "../../components/ThemedText";
-import { Colors } from "../../constants/Colors";
-import PageLayoutComponent from "../../components/PageLayoutComponent";
+import ThemedBox from "../../../components/ThemedBox";
+import ThemedText from "../../../components/ThemedText";
+import { Colors } from "../../../constants/Colors";
+import PageLayoutComponent from "../../../components/PageLayoutComponent";
 
 const QRcode: React.FC = () => {
   const colorScheme = useColorScheme();

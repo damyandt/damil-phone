@@ -7,12 +7,12 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Colors } from "../../constants/Colors";
-import { useAuthedContext } from "../../contexts/AuthContext";
-import PageLayoutComponent from "../../components/PageLayoutComponent";
-import ThemedBox from "../../components/ThemedBox";
-import Spacer from "../../components/Spacer";
-import { handleUserSignOut } from "../../contexts/authContextUtils";
+import { Colors } from "../../../constants/Colors";
+import PageLayoutComponent from "../../../components/PageLayoutComponent";
+import ThemedBox from "../../../components/ThemedBox";
+import Spacer from "../../../components/Spacer";
+import { useContext } from "react";
+import { AuthContext } from "../../../contexts/AuthContext";
 
 interface MenuItem {
   title: string;
@@ -24,8 +24,7 @@ const Menu: React.FC = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
   const router = useRouter();
-  const { setAuthedUser } = useAuthedContext();
-
+  const authContext = useContext(AuthContext);
   const menuItemsGym: MenuItem[] = [
     {
       title: "My Subscription",
@@ -116,9 +115,7 @@ const Menu: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.6}
             onPress={() => {
-              handleUserSignOut(setAuthedUser);
-              console.log("Log out");
-              router.replace("/(auth)/login");
+              authContext.logout();
             }}
             style={[styles.menuItem, { backgroundColor: theme.surface }]}
           >

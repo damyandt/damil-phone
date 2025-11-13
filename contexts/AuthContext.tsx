@@ -1,240 +1,170 @@
-import { createContext, JSX, useContext, useEffect, useState } from "react";
-import { getCookie } from "../Global/Utils/commonFunctions";
-import callApi from "../API/callApi";
-import {
-  getFromAsyncStorage,
-  handleFetchUserAccessToken,
-  handleUserSignOut,
-} from "./authContextUtils";
-import { User } from "../API/types/authTypes";
-import { PreferencesType, Response } from "../API/types/commonTypes";
-import {
-  getPreferences,
-  getQueryUsersGetCurrentUser,
-  getQueryUserTenant,
-} from "../API/queries/auth/apiAuthGetQueries";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { COOKIE_REFRESH_TOKEN } from "../constants/auth";
+import { SplashScreen, useRouter } from "expo-router";
+import { createContext, PropsWithChildren, useEffect, useState } from "react";
+import { User } from "../API/types/authTypes";
 
-export type GetQueryUsersGetCurrentUserSnippet = { user: User };
+import { COOKIE_ACCESS_TOKEN, COOKIE_REFRESH_TOKEN } from "../constants/auth";
+import { deleteCookie, setCookie } from "../Global/Utils/commonFunctions";
+import { getQueryUsersGetCurrentUser } from "../API/queries/auth/apiAuthGetQueries";
+import callApi from "../API/callApi";
+import { postLogin } from "../API/queries/auth/apiAuthpostQueris";
 
-interface UserContextType {
-  authedUser: Partial<User>;
-  setAuthedUser: (value: React.SetStateAction<Partial<User>>) => void;
-  setUserSignedIn: React.Dispatch<React.SetStateAction<boolean>>;
-  setRefreshUserData: React.Dispatch<React.SetStateAction<boolean>>;
-  authedUserLoading: boolean;
-  tenantLoading: boolean;
-  showIncompleteModal: boolean;
-  snoozeModal: (minutes?: number) => void;
-  preferences: PreferencesType;
-  tenant: any;
-}
+SplashScreen.preventAutoHideAsync();
 
-const UserContext = createContext<UserContextType>({} as UserContextType);
+type AuthState = {
+  isReady: boolean;
 
-interface AuthContextProps {
-  children: JSX.Element | JSX.Element[];
-}
+  isLoggedIn: boolean;
+  authedUser: Partial<User> | null;
 
-const AuthContext = ({ children }: AuthContextProps): React.ReactElement => {
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+};
+
+export const AuthContext = createContext<AuthState>({
+  isReady: false,
+  isLoggedIn: false,
+  authedUser: { email: "error" },
+  login: async () => false,
+  logout: () => {},
+});
+
+const STORAGE_AUTH_KEY = "auth-storage";
+
+export function AuthProvider2({ children }: PropsWithChildren) {
+  const router = useRouter();
+
+  const [isReady, setIsReady] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authedUser, setAuthedUser] = useState<Partial<User>>({
     email: "error",
   });
-  const [tenant, setTenant] = useState<any>({});
-  const [userSignedIn, setUserSignedIn] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [loadingTenant, setLoadingTenant] = useState<boolean>(false);
-  const [refreshUserData, setRefreshUserData] = useState<boolean>(false);
-  const [showIncompleteModal, setShowIncompleteModal] =
-    useState<boolean>(false);
-  // const storedMode: any = getFromAsyncStorage("themeMode");
-  // const defaultMode: PaletteMode =
-  //   storedMode === "dark" || storedMode === "light" ? storedMode : "light";
 
-  const [preferences, setPreferences] = useState<PreferencesType>({
-    themeColor: "#a250fa",
-    mode: "dark",
-    currency: "BGN",
-    language: "bg",
-    homeFilters: [
-      "gender - MALE",
-      "employment - REGULAR",
-      "employment - STUDENT",
-      "gender - MALE",
-    ],
-  });
+  // ---------------------------------------
+  // SAVE AUTH STATE TO STORAGE
+  // ---------------------------------------
+  const storeAuthState = async (loggedIn: boolean) => {
+    await AsyncStorage.setItem(
+      STORAGE_AUTH_KEY,
+      JSON.stringify({ isLoggedIn: loggedIn })
+    );
+  };
 
+  // ---------------------------------------
+  // FETCH USER DATA USING ACCESS TOKEN
+  // ---------------------------------------
   const fetchUserData = async () => {
-    const userInfo = await callApi<Response<any>>({
+    const userInfo = await callApi<any>({
       query: getQueryUsersGetCurrentUser(),
       auth: { setAuthedUser },
     });
 
-    userInfo.success && userInfo.data && setAuthedUser(userInfo.data);
-  };
-
-  useEffect(() => {
-    refreshUserData && fetchUserData();
-    setRefreshUserData(false);
-  }, [refreshUserData]);
-
-  const fetchPreferences = async () => {
-    if (!authedUser.roles?.includes("Member")) {
-      const preferencesInfo = await callApi<Response<any>>({
-        query: getPreferences(),
-        auth: { setAuthedUser },
-      });
-      preferencesInfo.success &&
-        preferencesInfo.data.settings &&
-        setPreferences(preferencesInfo.data.settings);
+    if (userInfo.success && userInfo.data) {
+      setAuthedUser(userInfo.data);
+      return true;
     }
+
+    return false;
   };
 
-  const fetchTenant = async () => {
+  // ---------------------------------------
+  // LOGIN FLOW
+  // ---------------------------------------
+  const login = async (email: string, password: string) => {
+    debugger;
+
     try {
-      setLoadingTenant(true);
-      const tenantInfo = await callApi<any>({
-        query: getQueryUserTenant(),
-        auth: { setAuthedUser },
+      const response = await callApi<any>({
+        query: postLogin({ email, password }),
+        auth: null,
       });
-      tenantInfo.success === true && setTenant(tenantInfo.data);
-      setLoadingTenant(false);
+
+      if (!response.refreshToken) return false;
+
+      const { refreshToken, accessToken } = response;
+
+      // store cookies
+      await setCookie({
+        name: COOKIE_REFRESH_TOKEN,
+        value: refreshToken,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 days
+        sameSite: "strict",
+        secure: true,
+      });
+
+      await setCookie({
+        name: COOKIE_ACCESS_TOKEN,
+        value: accessToken,
+        exp: Math.floor(Date.now() / 1000) + 60 * 15, // 15 min
+        sameSite: "strict",
+        secure: true,
+      });
+
+      setIsLoggedIn(true);
+      await storeAuthState(true);
+
+      // 3. Fetch logged in user info
+      await fetchUserData();
+
+      // 4. Navigate to app home
+      router.replace("/");
+
+      return true;
     } catch (err) {
-      console.error("Tenant fetch error", err);
+      console.log("Login error:", err);
+      return false;
     }
   };
 
-  useEffect(() => {
-    if (userSignedIn) {
-      fetchPreferences();
-      if (
-        authedUser.roles?.includes("Admin") ||
-        authedUser.roles?.includes("Staff")
-      ) {
-        fetchTenant();
-      }
-    }
-  }, [userSignedIn, authedUser]);
+  // ---------------------------------------
+  // LOGOUT FLOW
+  // ---------------------------------------
+  const logout = async () => {
+    setIsLoggedIn(false);
+    setAuthedUser({ email: "error" });
+    await storeAuthState(false);
 
+    // remove cookies
+    await deleteCookie(COOKIE_REFRESH_TOKEN);
+    await deleteCookie(COOKIE_ACCESS_TOKEN);
+
+    router.replace("/login");
+  };
+
+  // ---------------------------------------
+  // RESTORE AUTH FROM STORAGE ON LAUNCH
+  // ---------------------------------------
   useEffect(() => {
-    (async () => {
-      try {
-        if (!authedUser?.id) {
-          setLoading(true);
-          await checkIfUserIsSignedIn();
+    const loadAuthState = async () => {
+      const saved = await AsyncStorage.getItem(STORAGE_AUTH_KEY);
+
+      if (saved) {
+        const parsed = JSON.parse(saved);
+
+        if (parsed.isLoggedIn) {
+          setIsLoggedIn(true);
+          await fetchUserData();
         }
-      } catch (err) {
-        console.error("Authed user error", err);
       }
-      setLoading(false);
-    })();
-  }, [userSignedIn]);
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       if (!authedUser?.id) {
-  //         setLoading(true);
-  //         await checkIfUserIsSignedIn();
-  //       }
-  //     } catch (err) {
-  //       console.error("Authed user error", err);
-  //     }
-  //     setLoading(false);
-  //   })();
-  // }, []);
 
-  useEffect(() => {
-    if (authedUser.email === "error" && userSignedIn) {
-      setUserSignedIn(false);
-    } else if (authedUser.email !== "error" && !userSignedIn) {
-      setUserSignedIn(true);
-    }
-  }, [authedUser?.id]);
+      setIsReady(true);
+      SplashScreen.hideAsync();
+    };
 
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!authedUser?.id) {
-          setLoading(true);
-          await checkIfUserIsSignedIn();
-        }
-      } catch (err) {
-        console.error("Authed user error", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    loadAuthState();
   }, []);
 
-  useEffect(() => {
-    if (authedUser) {
-      let hasEmptyFields =
-        Object.values(authedUser).some(
-          (val: any) => val === "" || val === null
-        ) ||
-        Object.values(preferences).some(
-          (val: any) => val === "" || val === null
-        );
-      const snoozeUntil: any = getFromAsyncStorage("incompleteProfileSnooze");
-      const now = Date.now();
-
-      if (hasEmptyFields && (!snoozeUntil || now > parseInt(snoozeUntil))) {
-        setShowIncompleteModal(true);
-      }
-    }
-  }, [authedUser, preferences]);
-
-  const checkIfUserIsSignedIn = async () => {
-    const refreshToken: any = await getCookie(COOKIE_REFRESH_TOKEN);
-    if (refreshToken) {
-      const newAccessToken = await handleFetchUserAccessToken(
-        refreshToken,
-        callApi
-      );
-
-      if (newAccessToken) {
-        const signedInUser = await callApi<any>({
-          query: getQueryUsersGetCurrentUser(),
-          auth: { setAuthedUser },
-        });
-
-        if (signedInUser.success === true && signedInUser.data) {
-          setAuthedUser(signedInUser.data);
-        } else {
-          handleUserSignOut(setAuthedUser);
-        }
-      } else {
-        handleUserSignOut(setAuthedUser);
-      }
-    }
-  };
-
-  const snoozeModal = (minutes = 30) => {
-    const snoozeUntil = Date.now() + minutes * 60 * 1000;
-    AsyncStorage.setItem("incompleteProfileSnooze", snoozeUntil.toString());
-    setShowIncompleteModal(false);
-  };
   return (
-    <UserContext.Provider
+    <AuthContext.Provider
       value={{
+        isReady,
+        isLoggedIn,
         authedUser,
-        setAuthedUser,
-        setUserSignedIn,
-        authedUserLoading: loading,
-        tenantLoading: loadingTenant,
-        showIncompleteModal,
-        snoozeModal,
-        preferences,
-        setRefreshUserData,
-        tenant,
+        login,
+        logout,
       }}
     >
       {children}
-    </UserContext.Provider>
+    </AuthContext.Provider>
   );
-};
-
-export default AuthContext;
-
-export const useAuthedContext = (): UserContextType => useContext(UserContext);
+}

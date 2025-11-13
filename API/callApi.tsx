@@ -34,13 +34,25 @@ const API_BASE = "https://fitmanage-b0bb9372ef38.herokuapp.com/api/v1/";
 const NO_AUTH_ENDPOINTS = [
   "/tenants/lookup",
   "/access-requests",
-  "/auth/login",
-  "/auth/register",
+  "auth/login",
+  "auth/register",
 ];
-const shouldSkipToken = (endpoint: string) =>
-  NO_AUTH_ENDPOINTS.some((path) => endpoint.includes(path)) ||
-  endpoint.startsWith("/auth/") ||
-  endpoint.startsWith("/api/v1/auth/");
+const normalizeEndpoint = (endpoint: string) => {
+  // remove starting slash
+  if (endpoint.startsWith("/")) endpoint = endpoint.slice(1);
+  return endpoint;
+};
+
+const shouldSkipToken = (endpoint: string) => {
+  endpoint = normalizeEndpoint(endpoint);
+
+  return (
+    endpoint.startsWith("auth/login") ||
+    endpoint.startsWith("auth/register") ||
+    endpoint.startsWith("auth/") ||
+    NO_AUTH_ENDPOINTS.some((path) => normalizeEndpoint(path).includes(endpoint))
+  );
+};
 const callApi = async <T,>(
   params: CallApiParams,
   requestIsReMade: boolean = false
@@ -59,7 +71,7 @@ const callApi = async <T,>(
   const accessToken = await getCookie(COOKIE_ACCESS_TOKEN);
   console.log(endpoint);
   // If endpoint needs auth and we have no access token, try refreshing first
-  if (shouldSkipToken(endpoint) && !accessToken) {
+  if (!shouldSkipToken(endpoint) && !accessToken) {
     if (!requestIsReMade && auth) {
       const refreshToken: any = await getCookie(COOKIE_REFRESH_TOKEN);
       const accessToken = await handleFetchUserAccessToken(

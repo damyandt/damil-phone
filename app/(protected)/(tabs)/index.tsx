@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   View,
   ScrollView,
@@ -8,12 +8,12 @@ import {
   Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-import { Colors } from "../../constants/Colors";
-import PageLayoutComponent from "../../components/PageLayoutComponent";
-import ThemedBox from "../../components/ThemedBox";
-import ThemedText from "../../components/ThemedText";
-import ThemedView from "../../components/newThemedView";
+import { Colors } from "../../../constants/Colors";
+import PageLayoutComponent from "../../../components/PageLayoutComponent";
+import ThemedBox from "../../../components/ThemedBox";
+import ThemedText from "../../../components/ThemedText";
+import ThemedView from "../../../components/newThemedView";
+import { AuthContext } from "../../../contexts/AuthContext";
 
 type ClassItem = {
   title: string;
@@ -30,17 +30,15 @@ const MembersHome: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
-  // const { authedUser } = useAuthedContext();
+  const authContext = useContext(AuthContext);
   const handleTabPress = (tabKey: TabKey) => {
     setActiveTab(tabKey);
     Animated.timing(tabAnim, {
       toValue: tabKey === "upcoming" ? 0 : 1,
       duration: 300,
-      useNativeDriver: false, // cannot animate backgroundColor with native driver
+      useNativeDriver: false,
     }).start();
   };
-
-  // console.log(authedUser);
 
   const upcomingBg = tabAnim.interpolate({
     inputRange: [0, 1],
@@ -95,7 +93,7 @@ const MembersHome: React.FC = () => {
 
   return (
     <PageLayoutComponent
-      title="Hi, Damyan!"
+      title={`Hi, ${authContext?.authedUser?.email}!`}
       subTitle="Ready? Get set. Sweat. Repeat!"
     >
       <ScrollView
