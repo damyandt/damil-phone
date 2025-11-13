@@ -7,11 +7,7 @@ import {
   handleUserSignOut,
 } from "./authContextUtils";
 import { User } from "../API/types/authTypes";
-import {
-  PaletteMode,
-  PreferencesType,
-  Response,
-} from "../API/types/commonTypes";
+import { PreferencesType, Response } from "../API/types/commonTypes";
 import {
   getPreferences,
   getQueryUsersGetCurrentUser,
@@ -119,7 +115,7 @@ const AuthContext = ({ children }: AuthContextProps): React.ReactElement => {
         fetchTenant();
       }
     }
-  }, [userSignedIn]);
+  }, [userSignedIn, authedUser]);
 
   useEffect(() => {
     (async () => {
@@ -134,6 +130,19 @@ const AuthContext = ({ children }: AuthContextProps): React.ReactElement => {
       setLoading(false);
     })();
   }, [userSignedIn]);
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       if (!authedUser?.id) {
+  //         setLoading(true);
+  //         await checkIfUserIsSignedIn();
+  //       }
+  //     } catch (err) {
+  //       console.error("Authed user error", err);
+  //     }
+  //     setLoading(false);
+  //   })();
+  // }, []);
 
   useEffect(() => {
     if (authedUser.email === "error" && userSignedIn) {
@@ -178,7 +187,6 @@ const AuthContext = ({ children }: AuthContextProps): React.ReactElement => {
 
   const checkIfUserIsSignedIn = async () => {
     const refreshToken: any = await getCookie(COOKIE_REFRESH_TOKEN);
-    console.log("refresh", refreshToken);
     if (refreshToken) {
       const newAccessToken = await handleFetchUserAccessToken(
         refreshToken,
@@ -194,10 +202,10 @@ const AuthContext = ({ children }: AuthContextProps): React.ReactElement => {
         if (signedInUser.success === true && signedInUser.data) {
           setAuthedUser(signedInUser.data);
         } else {
-          handleUserSignOut();
+          handleUserSignOut(setAuthedUser);
         }
       } else {
-        handleUserSignOut();
+        handleUserSignOut(setAuthedUser);
       }
     }
   };

@@ -7,20 +7,26 @@ import {
 import ThemedBox from "../../components/ThemedBox";
 import ThemedText from "../../components/ThemedText";
 import { Colors } from "../../constants/Colors";
+import PageLayoutComponent from "../../components/PageLayoutComponent";
 
 const QRcode: React.FC = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container as ViewStyle}
-      style={{ backgroundColor: theme.background }}
+    <PageLayoutComponent
+      title="QR Code"
+      subTitle="Need this to join the training!"
     >
-      <ThemedBox style={styles.container}>
-        <ThemedText>QRcode</ThemedText>
-      </ThemedBox>
-    </ScrollView>
+      <ScrollView
+        contentContainerStyle={styles.container as ViewStyle}
+        style={{ backgroundColor: theme.background }}
+      >
+        <ThemedBox style={styles.container}>
+          <ThemedText>QRcode</ThemedText>
+        </ThemedBox>
+      </ScrollView>
+    </PageLayoutComponent>
   );
 };
 

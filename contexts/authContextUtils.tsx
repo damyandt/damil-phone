@@ -1,4 +1,4 @@
-import * as jwtDecode from "jwt-decode";
+import jwtDecode from "jwt-decode";
 import { deleteCookie, setCookie } from "../Global/Utils/commonFunctions";
 
 import { DecodedJWTToken, SetCookieParams } from "../API/types/authTypes";
@@ -10,15 +10,14 @@ import { COOKIE_ACCESS_TOKEN, COOKIE_REFRESH_TOKEN } from "../constants/auth";
 /**
  * @param navigate React Navigation navigate function
  */
-export const handleUserSignOut = async (navigation?: any) => {
+export const handleUserSignOut = async (setAuthedUser?: any) => {
   await deleteCookie(COOKIE_ACCESS_TOKEN);
   await deleteCookie(COOKIE_REFRESH_TOKEN);
+  setAuthedUser({ email: "error" });
 
-  // if (navigation) {
-  //   navigation.navigate("Login"); // navigate to Login screen
-  // }
-  <Link href={"/login"} />;
+  // <Link href={"/login"} />;
 };
+
 /**
  * Fetch a new access token using the refresh token
  */
@@ -28,7 +27,6 @@ export const handleFetchUserAccessToken = async (
   callApi: CallApiFn
 ) => {
   if (!refreshToken) {
-    // In RN we don't have window.location, use navigation instead
     console.warn("No refresh token, user needs to login again");
     return null;
   }
@@ -39,17 +37,18 @@ export const handleFetchUserAccessToken = async (
       auth: null,
     });
 
-    const accessToken = response.accessToken;
+    const accessToken: string = response.accessToken;
     if (!accessToken) return null;
 
-    const decodedToken: DecodedJWTToken = (jwtDecode as any).default(
-      accessToken
-    );
-
+    // const decodedToken: DecodedJWTToken = (jwtDecode as any).default(
+    //   accessToken
+    // );
+    // const decodedToken = jwtDecode<DecodedJWTToken>(accessToken);
     const accessCookie: SetCookieParams = {
       name: COOKIE_ACCESS_TOKEN,
       value: accessToken,
-      exp: decodedToken.exp,
+      // exp: decodedToken.exp,
+      exp: Math.floor(Date.now() / 1000) + 60 * 15,
       sameSite: "strict",
       secure: true,
     };

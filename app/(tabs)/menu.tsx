@@ -8,6 +8,8 @@ import {
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../constants/Colors";
+import { useAuthedContext } from "../../contexts/AuthContext";
+import PageLayoutComponent from "../../components/PageLayoutComponent";
 import ThemedBox from "../../components/ThemedBox";
 import Spacer from "../../components/Spacer";
 import { handleUserSignOut } from "../../contexts/authContextUtils";
@@ -22,6 +24,7 @@ const Menu: React.FC = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
   const router = useRouter();
+  const { setAuthedUser } = useAuthedContext();
 
   const menuItemsGym: MenuItem[] = [
     {
@@ -59,74 +62,79 @@ const Menu: React.FC = () => {
   };
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      contentContainerStyle={{ flexGrow: 1 }}
+    <PageLayoutComponent
+      title="Settings"
+      subTitle="Account and Gym Information"
     >
-      <ThemedBox style={styles.menuSection}>
-        {menuItemsGym.map((item, index) => (
+      <ScrollView
+        style={[styles.container, { backgroundColor: theme.background }]}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <ThemedBox style={styles.menuSection}>
+          {menuItemsGym.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.menuItem, { backgroundColor: theme.surface }]}
+              activeOpacity={0.6}
+              onPress={() => handlePress(item.route)}
+            >
+              <MaterialCommunityIcons
+                name={item.icon}
+                size={24}
+                color={theme.textPrimary}
+                style={{ width: 30 }}
+              />
+              <Text style={[styles.menuText, { color: theme.textPrimary }]}>
+                {item.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+          <Spacer height={20} />
+
+          {menuItemsProfile.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.menuItem, { backgroundColor: theme.surface }]}
+              activeOpacity={0.6}
+              onPress={() => handlePress(item.route)}
+            >
+              <MaterialCommunityIcons
+                name={item.icon}
+                size={24}
+                color={theme.textPrimary}
+                style={{ width: 30 }}
+              />
+              <Text style={[styles.menuText, { color: theme.textPrimary }]}>
+                {item.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+          <Spacer height={20} />
+
           <TouchableOpacity
-            key={index}
-            style={[styles.menuItem, { backgroundColor: theme.surface }]}
             activeOpacity={0.6}
-            onPress={() => handlePress(item.route)}
+            onPress={() => {
+              handleUserSignOut(setAuthedUser);
+              console.log("Log out");
+              router.replace("/(auth)/login");
+            }}
+            style={[styles.menuItem, { backgroundColor: theme.surface }]}
           >
             <MaterialCommunityIcons
-              name={item.icon}
+              name="logout"
               size={24}
               color={theme.textPrimary}
               style={{ width: 30 }}
             />
             <Text style={[styles.menuText, { color: theme.textPrimary }]}>
-              {item.title}
+              Log out
             </Text>
           </TouchableOpacity>
-        ))}
-
-        <Spacer height={20} />
-
-        {menuItemsProfile.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.menuItem, { backgroundColor: theme.surface }]}
-            activeOpacity={0.6}
-            onPress={() => handlePress(item.route)}
-          >
-            <MaterialCommunityIcons
-              name={item.icon}
-              size={24}
-              color={theme.textPrimary}
-              style={{ width: 30 }}
-            />
-            <Text style={[styles.menuText, { color: theme.textPrimary }]}>
-              {item.title}
-            </Text>
-          </TouchableOpacity>
-        ))}
-
-        <Spacer height={20} />
-
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() => {
-            handleUserSignOut();
-            console.log("Log out");
-            router.replace("/(auth)/login");
-          }}
-          style={[styles.menuItem, { backgroundColor: theme.surface }]}
-        >
-          <MaterialCommunityIcons
-            name="logout"
-            size={24}
-            color={theme.textPrimary}
-            style={{ width: 30 }}
-          />
-          <Text style={[styles.menuText, { color: theme.textPrimary }]}>
-            Log out
-          </Text>
-        </TouchableOpacity>
-      </ThemedBox>
-    </ScrollView>
+        </ThemedBox>
+      </ScrollView>
+    </PageLayoutComponent>
   );
 };
 

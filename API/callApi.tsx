@@ -31,7 +31,12 @@ export type CallApiParams = {
 };
 const API_BASE = "https://fitmanage-b0bb9372ef38.herokuapp.com/api/v1/";
 
-const NO_AUTH_ENDPOINTS = ["/tenants/lookup", "/access-requests"];
+const NO_AUTH_ENDPOINTS = [
+  "/tenants/lookup",
+  "/access-requests",
+  "/auth/login",
+  "/auth/register",
+];
 const shouldSkipToken = (endpoint: string) =>
   NO_AUTH_ENDPOINTS.some((path) => endpoint.includes(path)) ||
   endpoint.startsWith("/auth/") ||
@@ -51,8 +56,30 @@ const callApi = async <T,>(
     triggerDownload,
     responseType,
   } = query;
-
   const accessToken = await getCookie(COOKIE_ACCESS_TOKEN);
+  console.log(endpoint);
+  // If endpoint needs auth and we have no access token, try refreshing first
+  if (shouldSkipToken(endpoint) && !accessToken) {
+    if (!requestIsReMade && auth) {
+      const refreshToken: any = await getCookie(COOKIE_REFRESH_TOKEN);
+      const accessToken = await handleFetchUserAccessToken(
+        refreshToken,
+        callApi
+      );
+      if (accessToken) {
+        // we have fetched and saved the accessToken
+        return await callApi({ query, auth }, true);
+      } else {
+        // accessToken not fetched, log out the user due to invalid
+        // or expired refresh token
+        handleUserSignOut(auth);
+      }
+    } else {
+      // Already retried or no auth context
+      throw new Error("No access token available for authenticated request");
+    }
+  }
+
   let fetchOptions: RequestInit = {
     method,
     headers: {
@@ -61,7 +88,6 @@ const callApi = async <T,>(
         ? { Authorization: `Bearer ${accessToken}` }
         : {}),
     },
-
     credentials: "include",
   };
 
@@ -153,7 +179,7 @@ const callApi = async <T,>(
       } else {
         // accessToken not fetched, log out the user due to invalid
         // or expired refresh token
-        handleUserSignOut();
+        handleUserSignOut(auth);
       }
     }
   }

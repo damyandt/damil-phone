@@ -10,13 +10,14 @@ import { useAuthedContext } from "../../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import callApi from "../../API/callApi";
 import { postLogin } from "../../API/queries/auth/apiAuthpostQueris";
-import { COOKIE_REFRESH_TOKEN } from "../../constants/auth";
+import {
+  COOKIE_ACCESS_TOKEN,
+  COOKIE_REFRESH_TOKEN,
+} from "../../constants/auth";
 import { getCookie, setCookie } from "../../Global/Utils/commonFunctions";
-import { router } from "expo-router";
 import ThemedText from "../ThemedText";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const LoginFormRN = () => {
+const LoginFormRN = ({ onSuccess }: { onSuccess: any }) => {
   const { setUserSignedIn } = useAuthedContext();
   //   const { t } = useLanguageContext();
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -77,19 +78,17 @@ const LoginFormRN = () => {
           sameSite: "strict",
           secure: true,
         };
-
         await setCookie(refreshCookie);
-        // const cookie = await AsyncStorage.getItem(refreshCookie);
-        // console.log("82", cookie);
-        // setUserSignedIn(false);
-        // setUserSignedIn(true);
-        router.replace("/(tabs)");
+        const accessCookie: any = {
+          name: COOKIE_ACCESS_TOKEN,
+          value: response.refreshToken,
+          exp: Math.floor(Date.now() / 1000) + 60 * 15,
+          sameSite: "strict",
+          secure: true,
+        };
+        await setCookie(accessCookie);
       }
-
-      //   if (response.message === errorMessages(t).unverified) {
-      //     setOpenModal(true);
-      //     return;
-      //   }
+      onSuccess?.();
     } catch (err) {
       setErrors({ password: "Invalid Password!" });
       console.log("Login failed:", err);

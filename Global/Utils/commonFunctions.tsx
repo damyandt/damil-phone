@@ -50,7 +50,6 @@ export const getCookie = async (name: string): Promise<string | null> => {
       await deleteCookie(name);
       return null;
     }
-
     return cookieData.value;
   } catch (error) {
     console.error("Error getting cookie:", error);

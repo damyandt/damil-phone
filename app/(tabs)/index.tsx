@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   View,
-  Text,
   ScrollView,
   StyleSheet,
   Pressable,
@@ -9,12 +8,12 @@ import {
   Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+
 import { Colors } from "../../constants/Colors";
-import ThemedView from "../../components/newThemedView";
+import PageLayoutComponent from "../../components/PageLayoutComponent";
 import ThemedBox from "../../components/ThemedBox";
 import ThemedText from "../../components/ThemedText";
-import { useAuthedContext } from "../../contexts/AuthContext";
-import { debugStorage } from "../../Global/Utils/commonFunctions";
+import ThemedView from "../../components/newThemedView";
 
 type ClassItem = {
   title: string;
@@ -31,15 +30,7 @@ const MembersHome: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
-  const { authedUser } = useAuthedContext();
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log(authedUser);
-      debugStorage();
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [authedUser]);
+  // const { authedUser } = useAuthedContext();
   const handleTabPress = (tabKey: TabKey) => {
     setActiveTab(tabKey);
     Animated.timing(tabAnim, {
@@ -48,6 +39,8 @@ const MembersHome: React.FC = () => {
       useNativeDriver: false, // cannot animate backgroundColor with native driver
     }).start();
   };
+
+  // console.log(authedUser);
 
   const upcomingBg = tabAnim.interpolate({
     inputRange: [0, 1],
@@ -101,127 +94,132 @@ const MembersHome: React.FC = () => {
   ];
 
   return (
-    <ScrollView
-      contentContainerStyle={[styles.container]}
-      style={{ backgroundColor: theme.background }}
+    <PageLayoutComponent
+      title="Hi, Damyan!"
+      subTitle="Ready? Get set. Sweat. Repeat!"
     >
-      <ThemedBox style={styles.content}>
-        {/* News Section */}
-        <View>
-          <ThemedBox style={styles.sectionHeader}>
-            <ThemedText title style={styles.sectionHeaderText}>
-              News
-            </ThemedText>
-          </ThemedBox>
+      <ScrollView
+        contentContainerStyle={[styles.container]}
+        style={{ backgroundColor: theme.background }}
+      >
+        <ThemedBox style={styles.content}>
+          {/* News Section */}
+          <View>
+            <ThemedBox style={styles.sectionHeader}>
+              <ThemedText title style={styles.sectionHeaderText}>
+                News
+              </ThemedText>
+            </ThemedBox>
 
-          <View style={styles.newsContainer}>
-            {[1, 2].map((_, i) => (
-              <ThemedView key={i} style={styles.newsCard}>
-                <View style={styles.newsTitleContainer}>
-                  <View style={styles.newsAndIcon}>
-                    <Ionicons name="book" size={16} color="#888" />
-                    <ThemedText title style={styles.newsTitle}>
-                      News
-                    </ThemedText>
-                  </View>
-
-                  <View style={styles.newsAndIcon}>
-                    <ThemedText style={styles.newsTitle}>
-                      Seconds ago...
-                    </ThemedText>
-                    <Ionicons name="close" size={16} color="#888" />
-                  </View>
-                </View>
-                <ThemedText>
-                  {i === 0
-                    ? "Start working out to boost your fitness level!"
-                    : "2 more classes and you will reach level 4!"}
-                </ThemedText>
-              </ThemedView>
-            ))}
-          </View>
-        </View>
-
-        {/* Classes Section */}
-        <View>
-          <View style={styles.sectionHeader}>
-            <ThemedText title style={styles.sectionHeaderText}>
-              Classes
-            </ThemedText>
-          </View>
-
-          <ThemedView
-            style={[styles.tabs, { backgroundColor: theme.oppositeSurface }]}
-          >
-            <Pressable
-              style={{ flex: 1 }}
-              onPress={() => handleTabPress("upcoming")}
-            >
-              <Animated.View
-                style={[styles.tab, { backgroundColor: upcomingBg, flex: 1 }]}
-              >
-                <Animated.Text style={{ color: upcomingText }}>
-                  Upcoming
-                </Animated.Text>
-              </Animated.View>
-            </Pressable>
-
-            <Pressable
-              style={{ flex: 1 }}
-              onPress={() => handleTabPress("booked")}
-            >
-              <Animated.View
-                style={[styles.tab, { backgroundColor: bookedBg, flex: 1 }]}
-              >
-                <Animated.Text style={{ color: bookedText }}>
-                  Booked
-                </Animated.Text>
-              </Animated.View>
-            </Pressable>
-          </ThemedView>
-
-          <ThemedBox style={styles.grid}>
-            {activeTab === "upcoming" ? (
-              classes.map((cls, index) => (
-                <ThemedView key={index} style={styles.card}>
-                  <View style={{ gap: 10 }}>
-                    <View style={styles.row}>
-                      <Ionicons name="today" size={16} color="#888" />
-                      <ThemedText style={styles.date}>{cls.date}</ThemedText>
+            <View style={styles.newsContainer}>
+              {[1, 2].map((_, i) => (
+                <ThemedView key={i} style={styles.newsCard}>
+                  <View style={styles.newsTitleContainer}>
+                    <View style={styles.newsAndIcon}>
+                      <Ionicons name="book" size={16} color="#888" />
+                      <ThemedText title style={styles.newsTitle}>
+                        News
+                      </ThemedText>
                     </View>
-                    <ThemedText title style={styles.title}>
-                      {cls.title}
-                    </ThemedText>
-                    <ThemedText style={styles.subtitle}>
-                      {cls.duration} • {cls.location}
-                    </ThemedText>
-                  </View>
 
-                  <View>
-                    <ThemedText>{cls.spots} Spots Left</ThemedText>
+                    <View style={styles.newsAndIcon}>
+                      <ThemedText style={styles.newsTitle}>
+                        Seconds ago...
+                      </ThemedText>
+                      <Ionicons name="close" size={16} color="#888" />
+                    </View>
                   </View>
+                  <ThemedText>
+                    {i === 0
+                      ? "Start working out to boost your fitness level!"
+                      : "2 more classes and you will reach level 4!"}
+                  </ThemedText>
                 </ThemedView>
-              ))
-            ) : (
-              <ThemedBox style={styles.noClassesContainer}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={48}
-                  color={theme.textPrimary}
-                  style={{ marginBottom: 12 }}
-                />
-                <ThemedText style={styles.noClassesText}>
-                  You haven’t booked any classes yet!
-                </ThemedText>
-                <ThemedText style={styles.noClassesSubText}>
-                  Explore upcoming classes and reserve your spot.
-                </ThemedText>
-              </ThemedBox>
-            )}
-          </ThemedBox>
-        </View>
-      </ThemedBox>
-    </ScrollView>
+              ))}
+            </View>
+          </View>
+
+          {/* Classes Section */}
+          <View>
+            <View style={styles.sectionHeader}>
+              <ThemedText title style={styles.sectionHeaderText}>
+                Classes
+              </ThemedText>
+            </View>
+
+            <ThemedView
+              style={[styles.tabs, { backgroundColor: theme.oppositeSurface }]}
+            >
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => handleTabPress("upcoming")}
+              >
+                <Animated.View
+                  style={[styles.tab, { backgroundColor: upcomingBg, flex: 1 }]}
+                >
+                  <Animated.Text style={{ color: upcomingText }}>
+                    Upcoming
+                  </Animated.Text>
+                </Animated.View>
+              </Pressable>
+
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => handleTabPress("booked")}
+              >
+                <Animated.View
+                  style={[styles.tab, { backgroundColor: bookedBg, flex: 1 }]}
+                >
+                  <Animated.Text style={{ color: bookedText }}>
+                    Booked
+                  </Animated.Text>
+                </Animated.View>
+              </Pressable>
+            </ThemedView>
+
+            <ThemedBox style={styles.grid}>
+              {activeTab === "upcoming" ? (
+                classes.map((cls, index) => (
+                  <ThemedView key={index} style={styles.card}>
+                    <View style={{ gap: 10 }}>
+                      <View style={styles.row}>
+                        <Ionicons name="today" size={16} color="#888" />
+                        <ThemedText style={styles.date}>{cls.date}</ThemedText>
+                      </View>
+                      <ThemedText title style={styles.title}>
+                        {cls.title}
+                      </ThemedText>
+                      <ThemedText style={styles.subtitle}>
+                        {cls.duration} • {cls.location}
+                      </ThemedText>
+                    </View>
+
+                    <View>
+                      <ThemedText>{cls.spots} Spots Left</ThemedText>
+                    </View>
+                  </ThemedView>
+                ))
+              ) : (
+                <ThemedBox style={styles.noClassesContainer}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={48}
+                    color={theme.textPrimary}
+                    style={{ marginBottom: 12 }}
+                  />
+                  <ThemedText style={styles.noClassesText}>
+                    You haven’t booked any classes yet!
+                  </ThemedText>
+                  <ThemedText style={styles.noClassesSubText}>
+                    Explore upcoming classes and reserve your spot.
+                  </ThemedText>
+                </ThemedBox>
+              )}
+            </ThemedBox>
+          </View>
+        </ThemedBox>
+      </ScrollView>
+    </PageLayoutComponent>
   );
 };
 
