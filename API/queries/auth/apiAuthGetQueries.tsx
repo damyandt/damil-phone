@@ -38,3 +38,10 @@ export const getLink = (data: DataForCardLinkStripe): Query => ({
   method: "POST",
   variables: data,
 });
+
+export const getQrCode = (id: number): Query => ({
+  endpoint: `qr/${id}`,
+  method: "GET",
+  responseType: "blob", // ⬅️ REQUIRED
+  returnJson: false,
+});

@@ -13,10 +13,8 @@ export const setCookie = async (cookie: SetCookieParams) => {
     value,
     expires: expiryTime,
   });
-  // console.log("15", cookieData);
   try {
     await AsyncStorage.setItem(name, cookieData);
-    // console.log("18", await AsyncStorage.getItem(name));
   } catch (error) {
     console.error("Error setting cookie:", error);
   }
@@ -77,34 +75,4 @@ export const isObject = (value: any): value is Record<string, any> => {
  */
 export const isArray = (value: any): value is any[] => {
   return Array.isArray(value);
-};
-
-export const debugStorage = async () => {
-  try {
-    const refresh = await getCookie("refreshToken");
-    // const refresh: any = await AsyncStorage.getItem("refreshTokenr");
-    // const token: any = await AsyncStorage.getItem("refreshToken");
-    console.log("Raw:", refresh);
-    // console.log("Type:", typeof token);
-    // console.log(
-    //   "Chars:",
-    //   Array.from(token).map((c: any) => c.charCodeAt(0))
-    // );
-
-    // // Try safe parse
-    // try {
-    //   const parsed = JSON.parse(token);
-    //   console.log("✅ Parsed:", parsed);
-    // } catch (err:any) {
-    //   console.error("❌ Parse failed:", err.message);
-    // }
-    const keys = await AsyncStorage.getAllKeys();
-    const result = await AsyncStorage.multiGet(keys);
-    console.log("🔍 AsyncStorage contents:");
-    result.forEach(([key, value]) => {
-      console.log(`${key}:`, value);
-    });
-  } catch (error) {
-    console.error("Error reading AsyncStorage:", error);
-  }
 };

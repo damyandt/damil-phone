@@ -83,7 +83,7 @@ const callApi = async <T,>(
       } else {
         // accessToken not fetched, log out the user due to invalid
         // or expired refresh token
-        handleUserSignOut(auth);
+        handleUserSignOut(auth.setAuthedUser);
       }
     } else {
       // Already retried or no auth context
@@ -190,7 +190,7 @@ const callApi = async <T,>(
       } else {
         // accessToken not fetched, log out the user due to invalid
         // or expired refresh token
-        handleUserSignOut(auth);
+        handleUserSignOut(auth.setAuthedUser);
       }
     }
   }

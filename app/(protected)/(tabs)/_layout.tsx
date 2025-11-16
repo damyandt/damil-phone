@@ -4,11 +4,11 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Tabs } from "expo-router";
 import { Colors } from "../../../constants/Colors";
-// import ProtectedRoute from "../../components/ProtectedRoute";
 
 export default function TabLayout() {
   const colorScheme: any = useColorScheme();
   const theme = Colors[colorScheme];
+
   return (
     <Tabs
       screenOptions={{

@@ -1,5 +1,5 @@
 import jwtDecode from "jwt-decode";
-import { setCookie } from "../Global/Utils/commonFunctions";
+import { deleteCookie, setCookie } from "../Global/Utils/commonFunctions";
 
 import { SetCookieParams } from "../API/types/authTypes";
 import { postQueryTokenRefresh } from "../API/queries/auth/apiAuthGetQueries";
@@ -10,9 +10,9 @@ import { COOKIE_ACCESS_TOKEN, COOKIE_REFRESH_TOKEN } from "../constants/auth";
  * @param navigate React Navigation navigate function
  */
 export const handleUserSignOut = async (setAuthedUser?: any) => {
-  // await deleteCookie(COOKIE_ACCESS_TOKEN);
-  // await deleteCookie(COOKIE_REFRESH_TOKEN);
-  // setAuthedUser({ email: "error" });
+  await deleteCookie(COOKIE_ACCESS_TOKEN);
+  await deleteCookie(COOKIE_REFRESH_TOKEN);
+  setAuthedUser({ email: "error" });
 };
 
 /**

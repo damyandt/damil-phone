@@ -32,7 +32,6 @@ const LoginFormRN = ({
 
   const handleLogin = async () => {
     if (!validator(false)) return;
-    console.log(formData);
 
     onSuccess?.();
   };

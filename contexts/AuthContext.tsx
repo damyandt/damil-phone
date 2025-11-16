@@ -15,6 +15,7 @@ type AuthState = {
   isReady: boolean;
   isLoggedIn: boolean;
   authedUser: Partial<User> | null;
+  setAuthedUser: React.Dispatch<React.SetStateAction<Partial<User>>>;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   router: any;
@@ -24,6 +25,7 @@ export const AuthContext = createContext<AuthState>({
   isReady: false,
   isLoggedIn: false,
   authedUser: { email: "error" },
+  setAuthedUser: () => {},
   login: async () => false,
   logout: () => {},
   router: null,
@@ -108,7 +110,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       return true;
     } catch (err) {
-      console.log("Login error:", err);
+      console.error("Login error:", err);
       return false;
     }
   };
@@ -163,6 +165,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         isReady,
         isLoggedIn,
         authedUser,
+        setAuthedUser,
         login,
         logout,
         router,

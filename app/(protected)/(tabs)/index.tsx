@@ -93,7 +93,10 @@ const MembersHome: React.FC = () => {
 
   return (
     <PageLayoutComponent
-      title={`Hi, ${authContext?.authedUser?.email}!`}
+      title={`Hi, ${
+        authContext?.authedUser?.firstName ||
+        authContext?.authedUser?.email?.split("@")[0]
+      }!`}
       subTitle="Ready? Get set. Sweat. Repeat!"
     >
       <ScrollView
@@ -146,7 +149,7 @@ const MembersHome: React.FC = () => {
             </View>
 
             <ThemedView
-              style={[styles.tabs, { backgroundColor: theme.oppositeSurface }]}
+              style={[styles.tabs, { backgroundColor: theme.oppositeBG }]}
             >
               <Pressable
                 style={{ flex: 1 }}
