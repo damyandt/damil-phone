@@ -1,5 +1,14 @@
 import React, { useContext, useRef, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  Image,
+  Platform,
+  KeyboardAvoidingView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import Animated, {
@@ -52,34 +61,46 @@ const LoginPage = () => {
   }));
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
-      <View style={styles.blackContainer}>
-        <Animated.View style={[styles.logoContainer, logoStyle]}>
-          <Ionicons name="person-circle-outline" size={80} color="#fff" />
-        </Animated.View>
-
-        <Animated.View style={[styles.whiteBox, boxStyle]}>
-          <Text style={styles.header}>Login</Text>
-
-          <View style={styles.formContainer}>
-            <LoginFormRN
-              onSuccess={handleSuccessfulLogin}
-              formData={formData}
-              setFormData={setFormData}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+        <View style={styles.blackContainer}>
+          <Animated.View style={[styles.logoContainer, logoStyle]}>
+            <Image
+              source={require("../assets/icon.png")}
+              style={{
+                width: 100,
+                height: 100,
+                resizeMode: "contain",
+              }}
             />
+          </Animated.View>
 
-            <View style={styles.registerWrapper}>
-              <Text style={styles.registerText}>
-                {"You don't have an Account? "}
-              </Text>
-              <Link href={"register"}>
-                <Text style={styles.registerLink}>Register Here</Text>
-              </Link>
+          <Animated.View style={[styles.whiteBox, boxStyle]}>
+            <Text style={styles.header}>Login</Text>
+
+            <View style={styles.formContainer}>
+              <LoginFormRN
+                onSuccess={handleSuccessfulLogin}
+                formData={formData}
+                setFormData={setFormData}
+              />
+
+              <View style={styles.registerWrapper}>
+                <Text style={styles.registerText}>
+                  {"You don't have an Account? "}
+                </Text>
+                <Link href={"register"}>
+                  <Text style={styles.registerLink}>Register Here</Text>
+                </Link>
+              </View>
             </View>
-          </View>
-        </Animated.View>
-      </View>
-    </ScrollView>
+          </Animated.View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
