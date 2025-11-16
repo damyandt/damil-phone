@@ -41,6 +41,10 @@ export interface User {
   username?: string;
   email: string;
   gender?: Gender;
+  subscriptionPlan?: string;
+  subscriptionStatus?: string;
+  subscriptionStartDate?: any;
+  subscriptionEndDate?: any;
   roles: Array<Roles>;
   birthDate?: Dayjs | null;
   createdAt?: Dayjs | null;
