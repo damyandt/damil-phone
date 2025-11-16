@@ -69,7 +69,6 @@ const callApi = async <T,>(
     responseType,
   } = query;
   const accessToken = await getCookie(COOKIE_ACCESS_TOKEN);
-  console.log(endpoint);
   // If endpoint needs auth and we have no access token, try refreshing first
   if (!shouldSkipToken(endpoint) && !accessToken) {
     if (!requestIsReMade && auth) {

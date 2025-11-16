@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SplashScreen, useRouter } from "expo-router";
+import { Redirect, SplashScreen, useRouter } from "expo-router";
 import { createContext, PropsWithChildren, useEffect, useState } from "react";
 import { User } from "../API/types/authTypes";
 
@@ -13,12 +13,11 @@ SplashScreen.preventAutoHideAsync();
 
 type AuthState = {
   isReady: boolean;
-
   isLoggedIn: boolean;
   authedUser: Partial<User> | null;
-
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  router: any;
 };
 
 export const AuthContext = createContext<AuthState>({
@@ -27,11 +26,17 @@ export const AuthContext = createContext<AuthState>({
   authedUser: { email: "error" },
   login: async () => false,
   logout: () => {},
+  router: null,
 });
 
 const STORAGE_AUTH_KEY = "auth-storage";
-
-export function AuthProvider2({ children }: PropsWithChildren) {
+export const storeAuthState = async (loggedIn: boolean) => {
+  await AsyncStorage.setItem(
+    STORAGE_AUTH_KEY,
+    JSON.stringify({ isLoggedIn: loggedIn })
+  );
+};
+export function AuthProvider({ children }: PropsWithChildren) {
   const router = useRouter();
 
   const [isReady, setIsReady] = useState(false);
@@ -43,12 +48,6 @@ export function AuthProvider2({ children }: PropsWithChildren) {
   // ---------------------------------------
   // SAVE AUTH STATE TO STORAGE
   // ---------------------------------------
-  const storeAuthState = async (loggedIn: boolean) => {
-    await AsyncStorage.setItem(
-      STORAGE_AUTH_KEY,
-      JSON.stringify({ isLoggedIn: loggedIn })
-    );
-  };
 
   // ---------------------------------------
   // FETCH USER DATA USING ACCESS TOKEN
@@ -71,17 +70,17 @@ export function AuthProvider2({ children }: PropsWithChildren) {
   // LOGIN FLOW
   // ---------------------------------------
   const login = async (email: string, password: string) => {
-    debugger;
-
     try {
       const response = await callApi<any>({
         query: postLogin({ email, password }),
         auth: null,
       });
 
-      if (!response.refreshToken) return false;
-
-      const { refreshToken, accessToken } = response;
+      const { refreshToken, accessToken } = response.data;
+      if (!refreshToken || !accessToken) {
+        logout();
+        return false;
+      }
 
       // store cookies
       await setCookie({
@@ -99,13 +98,11 @@ export function AuthProvider2({ children }: PropsWithChildren) {
         sameSite: "strict",
         secure: true,
       });
-
       setIsLoggedIn(true);
       await storeAuthState(true);
 
       // 3. Fetch logged in user info
       await fetchUserData();
-
       // 4. Navigate to app home
       router.replace("/");
 
@@ -128,7 +125,7 @@ export function AuthProvider2({ children }: PropsWithChildren) {
     await deleteCookie(COOKIE_REFRESH_TOKEN);
     await deleteCookie(COOKIE_ACCESS_TOKEN);
 
-    router.replace("/login");
+    return <Redirect href="/login" />;
   };
 
   // ---------------------------------------
@@ -136,20 +133,26 @@ export function AuthProvider2({ children }: PropsWithChildren) {
   // ---------------------------------------
   useEffect(() => {
     const loadAuthState = async () => {
-      const saved = await AsyncStorage.getItem(STORAGE_AUTH_KEY);
+      setIsLoggedIn(false);
 
-      if (saved) {
+      const saved = await AsyncStorage.getItem(STORAGE_AUTH_KEY);
+      const refreshToken = await AsyncStorage.getItem(COOKIE_REFRESH_TOKEN);
+
+      if (saved && refreshToken) {
         const parsed = JSON.parse(saved);
 
         if (parsed.isLoggedIn) {
           setIsLoggedIn(true);
           await fetchUserData();
         }
+      } else {
+        logout();
       }
 
       setIsReady(true);
       SplashScreen.hideAsync();
     };
+    // };
 
     loadAuthState();
   }, []);
@@ -162,6 +165,7 @@ export function AuthProvider2({ children }: PropsWithChildren) {
         authedUser,
         login,
         logout,
+        router,
       }}
     >
       {children}

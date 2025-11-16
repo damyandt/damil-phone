@@ -1,11 +1,11 @@
 import { Stack } from "expo-router";
 import React from "react";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider2 } from "../contexts/AuthContext";
+import { AuthProvider } from "../contexts/AuthContext";
 
 export default function RootLayout() {
   return (
-    <AuthProvider2>
+    <AuthProvider>
       <StatusBar style="auto" />
       <Stack>
         <Stack.Screen
@@ -23,6 +23,6 @@ export default function RootLayout() {
           }}
         />
       </Stack>
-    </AuthProvider2>
+    </AuthProvider>
   );
 }

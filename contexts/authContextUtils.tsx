@@ -1,9 +1,8 @@
 import jwtDecode from "jwt-decode";
-import { deleteCookie, setCookie } from "../Global/Utils/commonFunctions";
+import { setCookie } from "../Global/Utils/commonFunctions";
 
-import { DecodedJWTToken, SetCookieParams } from "../API/types/authTypes";
+import { SetCookieParams } from "../API/types/authTypes";
 import { postQueryTokenRefresh } from "../API/queries/auth/apiAuthGetQueries";
-import { Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COOKIE_ACCESS_TOKEN, COOKIE_REFRESH_TOKEN } from "../constants/auth";
 
@@ -11,11 +10,9 @@ import { COOKIE_ACCESS_TOKEN, COOKIE_REFRESH_TOKEN } from "../constants/auth";
  * @param navigate React Navigation navigate function
  */
 export const handleUserSignOut = async (setAuthedUser?: any) => {
-  await deleteCookie(COOKIE_ACCESS_TOKEN);
-  await deleteCookie(COOKIE_REFRESH_TOKEN);
-  setAuthedUser({ email: "error" });
-
-  // <Link href={"/login"} />;
+  // await deleteCookie(COOKIE_ACCESS_TOKEN);
+  // await deleteCookie(COOKIE_REFRESH_TOKEN);
+  // setAuthedUser({ email: "error" });
 };
 
 /**
@@ -35,6 +32,7 @@ export const handleFetchUserAccessToken = async (
     const response = await callApi<any>({
       query: postQueryTokenRefresh({ token: refreshToken }),
       auth: null,
+      noTokenRequired: true,
     });
 
     const accessToken: string = response.accessToken;
@@ -47,7 +45,6 @@ export const handleFetchUserAccessToken = async (
     const accessCookie: SetCookieParams = {
       name: COOKIE_ACCESS_TOKEN,
       value: accessToken,
-      // exp: decodedToken.exp,
       exp: Math.floor(Date.now() / 1000) + 60 * 15,
       sameSite: "strict",
       secure: true,
